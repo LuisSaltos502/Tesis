@@ -1,0 +1,22 @@
+# Created by venv; see https://docs.python.org/3/library/venv.html
+
+# ---------- ENTORNO VIRTUAL ----------
+venv/
+
+# ---------- VARIABLES DE ENTORNO / ARCHIVOS SENSIBLES ----------
+app/.env
+*.env
+
+# ---------- ARCHIVOS COMPILADOS DE PYTHON ----------
+__pycache__/
+*.pyc
+
+# ---------- LOGS ----------
+*.log
+
+# ---------- CONFIGURACIONES DE EDITOR ----------
+.vscode/
+
+# ---------- ARCHIVOS DEL SISTEMA ----------
+.DS_Store
+Thumbs.db
