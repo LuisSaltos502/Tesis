@@ -2,6 +2,10 @@
 
 # ---------- ENTORNO VIRTUAL ----------
 venv/
+.env
+.env.local
+.env.dev
+.env.prod
 
 # ---------- VARIABLES DE ENTORNO / ARCHIVOS SENSIBLES ----------
 app/.env
@@ -10,13 +14,47 @@ app/.env
 # ---------- ARCHIVOS COMPILADOS DE PYTHON ----------
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+*.log
+pip-log.txt
+pip-delete-this-directory.txt
+
 
 # ---------- LOGS ----------
-*.log
+logs/
 
 # ---------- CONFIGURACIONES DE EDITOR ----------
 .vscode/
+.idea/
 
 # ---------- ARCHIVOS DEL SISTEMA ----------
-.DS_Store
 Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+
+# ---------- ARCHIVOS DE PRUEBA ----------
+*.sqlite
+*.db
+*.sqlite3
+
+# ---------- MIGRACIONES (ALEMBIC) ----------
+alembic/
+alembic.ini
+
+# ---------- ARCHIVOS DE BUILD ----------
+build/
+dist/
+*.egg-info/
+
+# ---------- CERTIFICADOS / LLAVES ----------
+*.pem
+*.key
+*.crt
+
+# ---------- ARCHIVOS DE MODELOS (IA / ML) ----------
+*.h5
+*.model
+*.pkl
+*.weights

@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import Settings, settings
 from app.database.session import get_db_session
 from app.utils.logging_config import configure_logging
+from app.api.system import router as system_router
 
 # -------------------------------------------------
 # Configuración global de logging
@@ -15,9 +16,23 @@ logger = logging.getLogger(__name__)
 
 
 # -------------------------------------------------
+# Creación de la aplicación FastAPI
+# -------------------------------------------------
+app = FastAPI(
+    title="Tesis Back API",
+    version="1.0.0",
+    description="API correspondiente al backend del proyecto de tesis."
+)
+
+# -------------------------------------------------
+# Configuración global de routers
+# -------------------------------------------------
+app.include_router(system_router)
+
+# -------------------------------------------------
 # Validación adicional del archivo .env
 # -------------------------------------------------
-settings = Settings()
+
 def validacion_env(settings: Settings) -> None:
     """
     Valida que ninguna variable cargada desde Settings sea None
@@ -67,14 +82,7 @@ except Exception:
 
 
 
-# -------------------------------------------------
-# Creación de la aplicación FastAPI
-# -------------------------------------------------
-app = FastAPI(
-    title="Tesis Back API",
-    version="1.0.0",
-    description="API correspondiente al backend del proyecto de tesis."
-)
+
 
 
 # -------------------------------------------------
@@ -85,7 +93,7 @@ async def startup_event():
     logger.info("Inicializando la aplicación Tesis Back API")
 
     safe_settings = settings.model_dump(exclude={"DB_PASSWORD", "MQTT_PASSWORD"})
-    logger.debug("Configuraciones cargadas (sin exponer secretos): %s", safe_settings)
+    logger.debug("Configuraciones cargadas (sin exponer secretos)")
 
 
 @app.on_event("shutdown")
@@ -93,21 +101,4 @@ async def shutdown_event():
     logger.info("Finalizando la aplicación Tesis Back API")
 
 
-# -------------------------------------------------
-# Endpoint básico de verificación
-# -------------------------------------------------
-@app.get("/health")
-async def health_check():
-    logger.debug("Solicitud recibida: /health")
-    return {
-        "status": "ok",
-        "db_host": settings.DB_HOST,
-        "db_name": settings.DB_NAME,
-    }
 
-@app.get("/db-check")
-async def db_check(session: AsyncSession = Depends(get_db_session)):
-    logger.debug("Probando conexión a la base de datos")
-    result = await session.execute(text("SELECT 1"))
-    value= result.scalar_one()
-    return {"status": "ok", "db_response": value}
