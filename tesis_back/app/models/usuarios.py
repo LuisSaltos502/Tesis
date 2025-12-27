@@ -83,7 +83,7 @@ class usuarios(Base):
     
     ultimo_inicio:Mapped[datetime | None] = mapped_column(
         DateTime,
-        nullable=True,
+        nullable=False,
     )
     
     # Relaciones

@@ -11,10 +11,12 @@ from sqlalchemy import (
     Numeric,
     ForeignKey,
     func,
+    Enum as SAEnum,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models import Base
-
+from app.models.enums import DeviceRole
+from app.models.enums import OrigenRole
 class dispositivos(Base):
     __tablename__ = "dispositivos"
     
@@ -44,12 +46,12 @@ class dispositivos(Base):
     
     # En la base este campo se encuentra como enum
     rol_dispositivo: Mapped[str] = mapped_column(
-        String(50),
+        SAEnum(DeviceRole, name="rol_usuario"),
         nullable=False,
     )
-    
+    # En la base este campo se encuentra como enum (Dispositivo simulado o fisico)
     origen: Mapped[str] = mapped_column(
-        String(50),
+        SAEnum(OrigenRole, name="origen_dispositivo"),
         nullable=False,
     )
     
@@ -81,11 +83,17 @@ class dispositivos(Base):
         DateTime,
         nullable=True,
     )
-    fecha_creacion: Mapped[datetime] = mapped_column(
+    fecha_de_instalacion: Mapped[datetime] = mapped_column(
         TIMESTAMP,
         nullable=False,
         server_default=func.now(),
     )
+    fecha_de_actualizacion: Mapped[datetime] = mapped_column(
+        TIMESTAMP,
+        nullable=False,
+        server_default=func.now(),
+        onupdate=func.now(),
+    )    
     device_key: Mapped[str] = mapped_column(
         String(45),
         nullable=False,

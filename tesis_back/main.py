@@ -7,7 +7,10 @@ from app.core.config import Settings, settings
 from app.database.session import get_db_session
 from app.utils.logging_config import configure_logging
 from app.api.system import router as system_router
-
+from app.api.system import router as system_router
+from app.api.user import router as users_router
+from app.api.device import router as device_router
+from app.api.auth import router as auth_router
 # -------------------------------------------------
 # Configuración global de logging
 # -------------------------------------------------
@@ -28,7 +31,9 @@ app = FastAPI(
 # Configuración global de routers
 # -------------------------------------------------
 app.include_router(system_router)
-
+app.include_router(users_router)
+app.include_router(device_router)
+app.include_router(auth_router)
 # -------------------------------------------------
 # Validación adicional del archivo .env
 # -------------------------------------------------

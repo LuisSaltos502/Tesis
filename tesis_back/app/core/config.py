@@ -20,6 +20,11 @@ class Settings(BaseSettings):
     MQTT_PASSWORD: str
     MQTT_TOPIC: str
     
+    #Seguridad
+    SECRET_KEY: str
+    Access_Token_Expire_Minutes_Usuarios: int
+    Access_Token_Expire_Minutes_Operadores: int
+    Algorithm: str
     model_config = SettingsConfigDict(
         env_file=str(ENV_FILE),
         env_file_encoding="utf-8",

@@ -30,6 +30,9 @@ class UserCreate(BaseModel):
     celular: str | None = None
     password: str
     rol: UserRole
+    class Config:
+        # Para evitar que te manden campos raros que no existen
+        extra = "forbid"
 
 
 # -------------------------------------------------------------------
@@ -62,6 +65,13 @@ class UserUpdate(BaseModel):
     estado_cuenta: int | None = None
     password: str | None = None
 
+    class Config:
+        # Para evitar que te manden campos raros que no existen
+        extra = "forbid"
+
+class loginSchema(BaseModel):
+    correo: EmailStr
+    password: str
     class Config:
         # Para evitar que te manden campos raros que no existen
         extra = "forbid"
