@@ -27,5 +27,11 @@ class Settings(BaseSettings):
         env_file=str(ENV_FILE),
         env_file_encoding="utf-8",
     )
+    #Telemetria
+    PH_MIN: float
+    PH_MAX: float
+    TURB_MAX: float
+    TDS_MAX: float
+    ALERT_COOLDOWN_MINUTES: int
 
 settings = Settings()
