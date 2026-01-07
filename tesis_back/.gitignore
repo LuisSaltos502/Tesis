@@ -10,7 +10,6 @@ venv/
 # ---------- VARIABLES DE ENTORNO / ARCHIVOS SENSIBLES ----------
 app/.env
 *.env
-
 # ---------- ARCHIVOS COMPILADOS DE PYTHON ----------
 __pycache__/
 *.pyc

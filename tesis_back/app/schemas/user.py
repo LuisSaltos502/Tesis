@@ -69,9 +69,24 @@ class UserUpdate(BaseModel):
         # Para evitar que te manden campos raros que no existen
         extra = "forbid"
 
+# -------------------------------------------------------------------
+# Esquema para token de login
+# -------------------------------------------------------------------
+
 class loginSchema(BaseModel):
     correo: EmailStr
     password: str
+    class Config:
+        # Para evitar que te manden campos raros que no existen
+        extra = "forbid"
+    
+# -------------------------------------------------------------------
+# Esquema para cambio de contraseña
+# -------------------------------------------------------------------
+
+class changePasswordSchema(BaseModel):
+    current_password: str
+    new_password: str
     class Config:
         # Para evitar que te manden campos raros que no existen
         extra = "forbid"

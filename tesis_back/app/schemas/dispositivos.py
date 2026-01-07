@@ -25,7 +25,7 @@ class DispositivoCreate(BaseModel):
     mac: str
     rol_dispositivo: DeviceRole
     origen: OrigenRole
-    id_usuario: int
+    id_usuario: int | None = None
     ubicacion_texto: str | None = None
     latitud: float | None = None
     longitud: float | None = None

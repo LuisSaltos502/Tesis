@@ -16,8 +16,6 @@ class Settings(BaseSettings):
     #MQTT
     MQTT_BROKER: str
     MQTT_PORT: int
-    MQTT_USER: str
-    MQTT_PASSWORD: str
     MQTT_TOPIC: str
     
     #Seguridad

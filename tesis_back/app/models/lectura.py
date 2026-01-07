@@ -1,6 +1,6 @@
 from __future__ import annotations
 from datetime import datetime
-from sqlalchemy import BigInteger, TIMESTAMP, Numeric, ForeignKey
+from sqlalchemy import BigInteger, TIMESTAMP, Numeric, ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models import Base
 from app.models.dispositivos import dispositivos
@@ -21,6 +21,7 @@ class lectura(Base):
     )
     fecha_de_medicion: Mapped[datetime] = mapped_column(
         TIMESTAMP,
+        server_default=func.now(),
         nullable=False,
     )
     
@@ -31,17 +32,17 @@ class lectura(Base):
         Numeric(10, 2),
         nullable=False,
     )
-    valor_turbidez: Mapped[float | None] = mapped_column(
+    valor_turbidez: Mapped[float] = mapped_column(
         Numeric(10, 2),
-        nullable=True,
+        nullable=False,
     )
-    valor_temperatura: Mapped[float | None] = mapped_column(
+    valor_temperatura: Mapped[float] = mapped_column(
         Numeric(10, 2),
-        nullable=True,
+        nullable=False,
     )
-    valor_conductividad: Mapped[float | None] = mapped_column(
+    valor_conductividad: Mapped[float] = mapped_column(
         Numeric(10, 2),
-        nullable=True,
+        nullable=False,
     )
     
     #relaciones
