@@ -160,15 +160,42 @@ def main():
     # -----------------------------
     async def consumer():
         logger.info("[CONSUMER] Iniciado")
-        
-        
         while True:
             item = await queue.get()  # queue ya existe dentro del loop
             try:
                 ts = datetime.now()
                 key = sensor_key(item["mac_gw"], item["mac_esp"])
                 telemetry = item["telemetry"]
+                mac_gw = item["mac_gw"]
+                mac_esp = item["mac_esp"]
+                gw = None
+                esp = None
+                async with AsyncSessionLocal() as session:
+                    stmt_gw = select(dispositivos).where(dispositivos.mac == mac_gw)
+                    stmt_esp = select(dispositivos).where(dispositivos.mac == mac_esp)
+                    gw = (await session.execute(stmt_gw)).scalar_one_or_none()
+                    esp = (await session.execute(stmt_esp)).scalar_one_or_none()
+                if gw is None:
+                    logger.warning("[DEVICE INVALID] gateway no registrado mac_gw=%s", mac_gw)
+                    continue
 
+                if esp is None:
+                    logger.warning("[DEVICE INVALID] sensor no registrado mac_esp=%s", mac_esp)
+                    continue
+
+                if gw.rol_dispositivo != DeviceRole.gateway:
+                    logger.warning("[DEVICE INVALID] mac_gw=%s no es gateway (rol=%s)", mac_gw, gw.rol_dispositivo)
+                    continue
+                if esp.rol_dispositivo != DeviceRole.sensor:
+                    logger.warning("[DEVICE INVALID] mac_esp=%s no es sensor (rol=%s)", mac_esp, esp.rol_dispositivo)
+                    continue
+
+                if esp.id_padre != gw.id_dispositivo:
+                    logger.warning("[DEVICE INVALID] relación inválida: sensor.id_padre=%s gateway.id=%s mac_esp=%s mac_gw=%s",
+                    esp.id_padre, gw.id_dispositivo, mac_esp, mac_gw)
+                    continue
+                
+                logger.info("[DEVICE OK] mac_gw=%s mac_esp=%s", mac_gw, mac_esp)
                 update_realtime_buffer(key, ts, telemetry)
                 update_hourly_acc(key, ts, telemetry)
                 apply_alert_logic(key, ts, telemetry)
