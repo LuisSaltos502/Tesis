@@ -15,6 +15,7 @@ class DispositivoBase(BaseModel):
     latitud: float | None = None
     longitud: float | None = None
     ultimo_heartbeat: datetime | None = None
+    id_padre: int | None = None
 
 
 # -------------------------------------------------------------------
@@ -29,6 +30,7 @@ class DispositivoCreate(BaseModel):
     ubicacion_texto: str | None = None
     latitud: float | None = None
     longitud: float | None = None
+    id_padre: int | None = None
 
 
 # -------------------------------------------------------------------
@@ -43,6 +45,7 @@ class DispositivoUpdate(BaseModel):
     ubicacion_texto: str | None = None
     latitud: float | None = None
     longitud: float | None = None
+    id_padre: int | None = None
 
     class Config:
         extra = "forbid"
@@ -58,6 +61,7 @@ class DispositivoRead(DispositivoBase):
     device_key: str
     fecha_de_instalacion: datetime
     fecha_de_actualizacion: datetime
+    id_padre: int | None = None
 
     class Config:
         from_attributes = True

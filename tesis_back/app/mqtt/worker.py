@@ -13,11 +13,12 @@ from app.models.enums import DeviceRole
 from app.models.dispositivos import dispositivos
 from pydantic import ValidationError
 from app.database.session import AsyncSessionLocal
+from app.models.usuarios import usuarios
+from app.utils.Correo import send_alert_email
 configure_logging()
 
 import logging
 logger = logging.getLogger(__name__)
-
 
 def main():
     # buffers en memoria
@@ -112,7 +113,7 @@ def main():
 
         acc["count"] += 1
 
-    def apply_alert_logic(key: str, ts: datetime, telemetry: dict):
+    def apply_alert_logic(key: str, ts: datetime, telemetry: dict, user_email: str, mac_gw: str, mac_esp: str):
         reasons = check_anomaly(telemetry)
         is_anomalous_now = len(reasons) > 0
 
@@ -126,20 +127,39 @@ def main():
         # normal -> anómalo
         if (not st["is_anomalous"]) and is_anomalous_now:
             st["is_anomalous"] = True
-            st["last_email_at"] = ts  # aquí simulamos que “se envió”
+            st["last_email_at"] = ts  
             st["last_reasons"] = reasons
             logger.warning("[ALERT NEW] sensor=%s ts=%s reasons=%s telemetry=%s", key, ts, reasons, telemetry)
+            
+            # Enviar correo al usuario correspondiente
+            send_alert_email(
+                to_email=user_email,
+                subject="Alerta de condición anómala en sensor",
+                reasons=reasons,
+                sensor_mac=mac_esp,
+                gateway_mac=mac_gw,
+                telemetry=telemetry,
+            )
             return
 
         # anómalo -> sigue anómalo
         if st["is_anomalous"] and is_anomalous_now:
             last = st["last_email_at"]
             if last is None or (ts - last) >= cooldown:
-                st["last_email_at"] = ts  # simulamos “recordatorio”
+                st["last_email_at"] = ts  # hora de envio del recordatorio
                 st["last_reasons"] = reasons
                 logger.warning("[ALERT REMINDER] sensor=%s ts=%s reasons=%s telemetry=%s", key, ts, reasons, telemetry)
+                
+                # Enviar correo al usuario correspondiente
+                send_alert_email(
+                    to_email=user_email,
+                    subject="Recordatorio de condición anómala en sensor",
+                    reasons=reasons,
+                    sensor_mac=mac_esp,
+                    gateway_mac=mac_gw,
+                    telemetry=telemetry,
+                )
             else:
-                # opcional: debug para no spamear logs
                 st["last_reasons"] = reasons
                 logger.info("[ALERT STILL] sensor=%s ts=%s reasons=%s (cooldown activo)", key, ts, reasons)
             return
@@ -170,11 +190,23 @@ def main():
                 mac_esp = item["mac_esp"]
                 gw = None
                 esp = None
+                user_id = None
+                user = None
+
+                # ------------------------------------------
+                # 1) Dentro del async with: solo gateway y sensor
+                # ------------------------------------------
                 async with AsyncSessionLocal() as session:
                     stmt_gw = select(dispositivos).where(dispositivos.mac == mac_gw)
                     stmt_esp = select(dispositivos).where(dispositivos.mac == mac_esp)
+
                     gw = (await session.execute(stmt_gw)).scalar_one_or_none()
                     esp = (await session.execute(stmt_esp)).scalar_one_or_none()
+
+                # ------------------------------------------
+                # 2) Validación de dispositivos
+                # ------------------------------------------
+
                 if gw is None:
                     logger.warning("[DEVICE INVALID] gateway no registrado mac_gw=%s", mac_gw)
                     continue
@@ -186,25 +218,52 @@ def main():
                 if gw.rol_dispositivo != DeviceRole.gateway:
                     logger.warning("[DEVICE INVALID] mac_gw=%s no es gateway (rol=%s)", mac_gw, gw.rol_dispositivo)
                     continue
+
                 if esp.rol_dispositivo != DeviceRole.sensor:
                     logger.warning("[DEVICE INVALID] mac_esp=%s no es sensor (rol=%s)", mac_esp, esp.rol_dispositivo)
                     continue
 
                 if esp.id_padre != gw.id_dispositivo:
-                    logger.warning("[DEVICE INVALID] relación inválida: sensor.id_padre=%s gateway.id=%s mac_esp=%s mac_gw=%s",
-                    esp.id_padre, gw.id_dispositivo, mac_esp, mac_gw)
+                    logger.warning(
+                        "[DEVICE INVALID] relación inválida: sensor.id_padre=%s gateway.id=%s mac_esp=%s mac_gw=%s",
+                        esp.id_padre,
+                        gw.id_dispositivo,
+                        mac_esp,
+                        mac_gw,
+                    )
                     continue
-                
+
+                # ------------------------------------------
+                # 3) Consultar usuario SOLO si el dispositivo es válido
+                # ------------------------------------------
+
+                if esp is not None:
+                    user_id = esp.id_usuario  # Obtener el id_usuario del sensor
+
+                    # Consulta para obtener el usuario por id_usuario
+                    async with AsyncSessionLocal() as session:
+                        stmt_user = select(usuarios).where(usuarios.id_usuario == user_id)
+                        user = (await session.execute(stmt_user)).scalar_one_or_none()
+
+                    if user is None:
+                        logger.warning("[USER INVALID] no existe usuario id_usuario=%s (mac_esp=%s)", user_id, mac_esp)
+                        continue
+
+                    # Loggear datos del usuario
+                    logger.info("[USER VALID] id_usuario=%s nombre=%s correo=%s", user.id_usuario, user.nombre, user.correo)
+
+                # ------------------------------------------
+                # 4) Si todo es válido, procesar los datos
+                # ------------------------------------------
                 logger.info("[DEVICE OK] mac_gw=%s mac_esp=%s", mac_gw, mac_esp)
                 update_realtime_buffer(key, ts, telemetry)
                 update_hourly_acc(key, ts, telemetry)
-                apply_alert_logic(key, ts, telemetry)
+                apply_alert_logic(key, ts, telemetry, user.correo, mac_gw, mac_esp)  # Pasa el correo a apply_alert_logic
 
             except Exception as e:
                 logger.exception("[CONSUMER] Error procesando item=%s err=%s", item, e)
             finally:
                 queue.task_done()
-
     # -----------------------------
     # Loop thread
     # -----------------------------
@@ -213,7 +272,7 @@ def main():
         asyncio.set_event_loop(loop)
         queue = asyncio.Queue()
 
-        #  Paso 1: arrancar consumer dentro del loop
+        # Paso 1: arrancar consumer dentro del loop
         loop.create_task(consumer())
 
         loop.run_forever()

@@ -33,5 +33,12 @@ class Settings(BaseSettings):
     TURB_MAX: float
     TDS_MAX: float
     ALERT_COOLDOWN_MINUTES: int
+    
+    #Correo
+    SMTP_HOST: str
+    SMTP_PORT: int
+    SMTP_USER: str
+    SMTP_PASSWORD: str
+    SMTP_FROM_NAME: str
 
 settings = Settings()

@@ -8,11 +8,23 @@ Descripcion
 API del backend del proyecto de tesis. Implementada con FastAPI.
 
 Inicio rapido
+- Crear un entorno virtual dentro de esta carpeta (`tesis_back`):
+  cd tesis_back
+  python -m venv venv
+- Activar el entorno virtual (PowerShell):
+  .\venv\Scripts\activate
+- Si PowerShell bloquea el script de activacion:
+  Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 - Crear el archivo de entorno en `app/.env`.
 - Instalar dependencias:
   pip install -r requirements.txt
 - Ejecutar la app con Uvicorn:
   uvicorn main:app --reload
+
+Dependencias y versiones
+- `requirements.txt` contiene las versiones exactas del entorno virtual (congeladas).
+- Para actualizarlo en este mismo entorno:
+  pip freeze > requirements.txt
 
 Base URL
 - Por defecto: http://localhost:8000

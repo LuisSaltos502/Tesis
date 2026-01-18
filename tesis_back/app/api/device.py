@@ -74,6 +74,7 @@ async def crear_dispositivo(
         longitud=data.longitud,
         estado_dispositivo=1,
         device_key=device_key,
+        id_padre=data.id_padre,
     )
 
     session.add(nuevo_dispositivo)
